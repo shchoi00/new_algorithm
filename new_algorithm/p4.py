@@ -13,14 +13,13 @@ def visualize_shared_xy_pcd(input_file, voxel_size=0.1, output_file='filtered_pc
     # Load the point cloud
     pcd = o3d.io.read_point_cloud(input_file)
     points = np.asarray(pcd.points)
-    # points = np.round(np.asarray(pcd.points), decimals=1)
 
     min_z = np.min(points[:, 2])
     max_z = np.max(points[:, 2])
     height = max_z - min_z
-    
-     # Calculate the threshold as 30% of the height
-    threshold = 0.33 * height* 10
+
+    # Calculate the threshold as 30% of the height
+    threshold = 0.16 * height * 10
     print(height)
     print(threshold)
 
@@ -30,27 +29,37 @@ def visualize_shared_xy_pcd(input_file, voxel_size=0.1, output_file='filtered_pc
     # Group points by their (x, y) voxel indices and count occurrences
     voxel_to_points = {}
     xy_frequency = {}
-
+    z_already_counted = {}  # New dictionary to track Z-coordinates for each voxel
+    
     for voxel_index, point in zip(voxel_indices, points):
         xy_key = tuple(voxel_index[:2])
+        z_index = voxel_index[2]
 
         if xy_key not in voxel_to_points:
             voxel_to_points[xy_key] = []
             xy_frequency[xy_key] = 0
+        
 
-        voxel_to_points[xy_key].append(point)
-        xy_frequency[xy_key] += 1
+        # Check if this Z index has already been counted for this XY key
+        if not any(z_index == existing_point_z_index for existing_point, existing_point_z_index in voxel_to_points[xy_key]):
+            
+            xy_frequency[xy_key] += 1
 
-    # Filter and color points
+        # Add the point and its Z index to the list
+        voxel_to_points[xy_key].append((point, z_index))
+ 
+    # Separate points and colors for the new point cloud
     max_frequency = max(xy_frequency.values())
     colored_points = []
+    # print(max(xy_frequency.values()))
+    # print((xy_frequency.values()))
     for xy_key, pts in voxel_to_points.items():
         if xy_frequency[xy_key] >= threshold:
             color = get_rainbow_color(xy_frequency[xy_key], max_frequency)
-            for pt in pts:
+            for pt, _ in pts:
+                # print(pt)
                 colored_points.append((*pt, *color))
 
-    # Separate points and colors for the new point cloud
     if not colored_points:
         print("No points meet the shoulder threshold.")
         return
@@ -192,7 +201,7 @@ def find_optimal_eps(input, min_points):
 input_file = './converted/converted_AI_7F_05.pcd'
 output_file = './filtered/filtered_AI_7F_05_40%.pcd'
 # visualize_shared_xy_pcd(input_file, output_file=output_file)
-# visualize_shared_xy_pcd(input_file='./converted/converted_vision_tower_B3_05.pcd', output_file= './filtered/filtered_vision_tower_B3_05_33%.pcd')
+visualize_shared_xy_pcd(input_file='./converted/converted_vision_tower_B3_05.pcd', output_file= './filtered/filtered_vision_tower_B3_05_33%.pcd')
 # visualize_shared_xy_pcd(input_file='./converted/converted_gachon_station_05.pcd', output_file= './filtered/converted_gachon_station_05_33%.pcd')
 
 
@@ -205,4 +214,4 @@ output_file = './filtered/filtered_AI_7F_05_40%.pcd'
 # eps = find_optimal_eps('./filtered/filtered_vision_tower_B3_05_33%.pcd', 100)
 # eps = find_optimal_eps('./filtered/filtered_gachon_hall_05_33%.pcd', 100)
 # print(eps)
-DBScan(input = './filtered/filtered_vision_tower_B3_05_33%.pcd', output='./filtered/filtered_vision_tower_B3_05_0250_clustered.pcd',eps=0.25)
+# DBScan(input = './filtered/filtered_vision_tower_B3_05_33%.pcd', output='./filtered/filtered_vision_tower_B3_05_0250_clustered.pcd',eps=0.25)
