@@ -17,15 +17,22 @@ def visualize_shared_xy_pcd(input_file, voxel_size=0.1, output_file='filtered_pc
     min_z = np.min(points[:, 2])
     max_z = np.max(points[:, 2])
     height = max_z - min_z
+    print(max_z)
+    print(min_z)
 
     # Calculate the threshold as 30% of the height
-    threshold = 0.16 * height * 10
-    print(height)
-    print(threshold)
+    # threshold = 0.16 * height * 10
+    
+    
 
     # Compute voxel indices for each point
     voxel_indices = np.floor(points / voxel_size).astype(int)
-
+    print(voxel_indices)
+    print(max(voxel_indices[:, 2]))
+    print(min(voxel_indices[:, 2]))
+    threshold = (max(voxel_indices[:, 2]) - min(voxel_indices[:, 2])) / 5 
+    print(height)
+    print(threshold)
     # Group points by their (x, y) voxel indices and count occurrences
     voxel_to_points = {}
     xy_frequency = {}
